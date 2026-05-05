@@ -11,19 +11,27 @@
 
 ## Installation
 
-**Using npm:**
+**Global installation:**
 
 ```sh
+# npm
 npm install -g verlift
-```
 
-**Using yarn:**
-
-```sh
+# yarn
 yarn global add verlift
 ```
 
-Or use without installing:
+**As a dev dependency:**
+
+```sh
+# npm
+npm install --save-dev verlift
+
+# yarn
+yarn add --dev verlift
+```
+
+**Using npx / yarn dlx:**
 
 ```sh
 # npx
