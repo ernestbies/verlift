@@ -1,6 +1,11 @@
-# verlift
+<p align="center">
+  <img src="assets/verlift.png" width="300" alt="verlift logo" />
+</p>
 
-Zero-dependency CLI tool for scanning package licenses and bumping project versions. Supports both web and React Native projects.
+<p align="center">
+  Zero-dependency CLI tool for scanning package licenses and bumping project versions.<br/>
+  Supports both web and React Native projects.
+</p>
 
 ## Installation
 
@@ -44,11 +49,11 @@ verlift scan [options]
 
 **Options:**
 
-| Flag | Default | Description |
-|---|---|---|
-| `--includeDev` | `false` | Include `devDependencies` in the scan |
-| `--output <file>` | `licenses.json` | Output file path |
-| `--includeVersion` | `false` | Include each package's version in the output |
+| Flag               | Default         | Description                                  |
+| ------------------ | --------------- | -------------------------------------------- |
+| `--includeDev`     | `false`         | Include `devDependencies` in the scan        |
+| `--output <file>`  | `licenses.json` | Output file path                             |
+| `--includeVersion` | `false`         | Include each package's version in the output |
 
 **Examples:**
 
@@ -95,20 +100,20 @@ verlift bump <type> [options]
 
 **Arguments:**
 
-| Argument | Description |
-|---|---|
-| `patch` | Increment patch version: `1.2.3` → `1.2.4` |
-| `minor` | Increment minor version: `1.2.3` → `1.3.0` |
-| `major` | Increment major version: `1.2.3` → `2.0.0` |
-| `code` | Bump only Android/iOS build codes, skip semver |
+| Argument | Description                                    |
+| -------- | ---------------------------------------------- |
+| `patch`  | Increment patch version: `1.2.3` → `1.2.4`     |
+| `minor`  | Increment minor version: `1.2.3` → `1.3.0`     |
+| `major`  | Increment major version: `1.2.3` → `2.0.0`     |
+| `code`   | Bump only Android/iOS build codes, skip semver |
 
 **Options:**
 
-| Flag | Default | Description |
-|---|---|---|
-| `--output <file>` | `version.json` | Output file for version snapshot |
-| `--gradlePath <path>` | Auto-detected | Path to `android/app/build.gradle` |
-| `--pbxprojPath <path>` | Auto-detected | Path to `ios/*.xcodeproj/project.pbxproj` |
+| Flag                   | Default        | Description                               |
+| ---------------------- | -------------- | ----------------------------------------- |
+| `--output <file>`      | `version.json` | Output file for version snapshot          |
+| `--gradlePath <path>`  | Auto-detected  | Path to `android/app/build.gradle`        |
+| `--pbxprojPath <path>` | Auto-detected  | Path to `ios/*.xcodeproj/project.pbxproj` |
 
 **Examples:**
 
@@ -173,4 +178,4 @@ verlift --help
 
 ## License
 
-MIT
+MIT © [Ernest Bieś](https://github.com/ernestbies)
