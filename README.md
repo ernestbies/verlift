@@ -7,6 +7,8 @@
   Supports both web and React Native projects.
 </p>
 
+<br/>
+
 ## Installation
 
 **Using npm:**
