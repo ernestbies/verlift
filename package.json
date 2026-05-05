@@ -1,7 +1,7 @@
 {
   "name": "verlift",
   "version": "1.0.0",
-  "description": "CLI tool for scanning package licenses and bumping versions",
+  "description": "Zero-dependency CLI tool for scanning package licenses and bumping project versions. Supports both web and React Native projects.",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "bin": {
@@ -18,8 +18,14 @@
   "files": [
     "dist"
   ],
-  "keywords": ["license", "scan", "version", "bump", "cli"],
-  "author": "",
+  "keywords": [
+    "license",
+    "scan",
+    "version",
+    "bump",
+    "cli"
+  ],
+  "author": "ernestbies",
   "license": "MIT",
   "engines": {
     "node": ">=14"

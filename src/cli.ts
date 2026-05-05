@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import * as fs from 'fs';
+import * as path from 'path';
 import { bump, BumpType } from './commands/bump';
 import { scan } from './commands/scan';
 
@@ -19,13 +21,14 @@ Scan options:
   --includeVersion    Include version field in output (default: false)
 
 Bump options (Web project):
-  verlift bump <patch|minor|major> [options]
+  verlift bump [patch|minor|major]   (default: patch)
 
 Bump options (React Native project – auto-detected):
-  verlift bump <patch|minor|major|code> [options]
+  verlift bump [patch|minor|major|code]   (default: code)
 
   patch|minor|major   Bump semver AND increment build codes
-  code                Increment build codes only (Android versionCode, iOS CURRENT_PROJECT_VERSION)
+  code                Increment build codes only – React Native only
+                      (Android versionCode, iOS CURRENT_PROJECT_VERSION)
 
   --output <file>      Version file name (default: version.json)
   --gradlePath <path>  Explicit path to android/app/build.gradle
@@ -75,10 +78,12 @@ if (command === 'scan') {
 } else if (command === 'bump') {
   const subcommand = args[1];
   const validTypes = ['patch', 'minor', 'major', 'code'];
+  const resolvedSubcommand = validTypes.includes(subcommand) ? subcommand : null;
 
-  if (!subcommand || !validTypes.includes(subcommand)) {
+  if (subcommand && !resolvedSubcommand && !subcommand.startsWith('--')) {
     console.error(
       `Error: bump requires a type argument: patch | minor | major | code\n` +
+        `  Note: "code" is only available for React Native projects.\n` +
         `  Example: verlift bump patch`
     );
     process.exit(1);
@@ -92,14 +97,27 @@ if (command === 'scan') {
     pbxprojPath?: string;
   } = {};
 
-  const bumpCodeOnly = subcommand === 'code';
+  const argsStartIndex = resolvedSubcommand ? 2 : 1;
+
+  const cwd = process.cwd();
+  const pkgPath = path.resolve(cwd, 'package.json');
+  if (!fs.existsSync(pkgPath)) {
+    console.error(`Error: package.json not found in ${cwd}`);
+    process.exit(1);
+  }
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+  const deps = { ...pkg.dependencies, ...pkg.devDependencies };
+  const isRN = Boolean(deps['react-native']);
+
+  const effectiveType = resolvedSubcommand ?? (isRN ? 'code' : 'patch');
+  const bumpCodeOnly = effectiveType === 'code';
 
   if (!bumpCodeOnly) {
-    options.type = subcommand as BumpType;
+    options.type = effectiveType as BumpType;
   }
   options.bumpCodeOnly = bumpCodeOnly;
 
-  for (let i = 2; i < args.length; i++) {
+  for (let i = argsStartIndex; i < args.length; i++) {
     const arg = args[i];
 
     if (arg === '--output') {
