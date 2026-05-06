@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  Zero-dependency CLI tool for scanning package licenses and bumping project versions.<br/>
+  CLI tool for scanning package licenses and bumping project versions.<br/>
   Supports both web and React Native projects.
 </p>
 
