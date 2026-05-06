@@ -109,6 +109,15 @@ if (command === 'scan') {
   const deps = { ...pkg.dependencies, ...pkg.devDependencies };
   const isRN = Boolean(deps['react-native']);
 
+  if (resolvedSubcommand === 'code' && !isRN) {
+    console.error(
+      `Error: "code" bump type is only available for React Native projects.\n` +
+        `  This project does not have "react-native" in its dependencies.\n` +
+        `  Use: verlift bump [patch|minor|major]`
+    );
+    process.exit(1);
+  }
+
   const effectiveType = resolvedSubcommand ?? (isRN ? 'code' : 'patch');
   const bumpCodeOnly = effectiveType === 'code';
 
