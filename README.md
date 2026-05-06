@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/verlift.png" width="300" alt="verlift logo" />
+  <img src="https://raw.githubusercontent.com/ernestbies/verlift/main/assets/verlift.png" width="300" alt="verlift logo" />
 </p>
 
 <p align="center">
