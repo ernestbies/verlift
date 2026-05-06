@@ -98,5 +98,5 @@ export function scan(options: ScanOptions = {}): void {
 
   const outputPath = path.resolve(cwd, output);
   fs.writeFileSync(outputPath, JSON.stringify(results, null, 2));
-  console.info(`Done! Saved ${results.length} packages to ${output}`);
+  console.log(`Done! Saved ${results.length} packages to ${output}`);
 }
