@@ -110,6 +110,30 @@ function pbxBumpProjectVersion(content: string): GradleCodeResult {
   return { updated, current, next };
 }
 
+function readExistingRNVersionData(outputPath: string): RNVersionData {
+  if (!fs.existsSync(outputPath)) return {};
+  try {
+    const raw = JSON.parse(readFile(outputPath));
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+    const data: RNVersionData = {};
+    if (raw.android && typeof raw.android === 'object' && !Array.isArray(raw.android)) {
+      data.android = {
+        versionName: String(raw.android.versionName ?? ''),
+        versionCode: Number(raw.android.versionCode ?? 0),
+      };
+    }
+    if (raw.ios && typeof raw.ios === 'object' && !Array.isArray(raw.ios)) {
+      data.ios = {
+        versionName: String(raw.ios.versionName ?? ''),
+        versionCode: Number(raw.ios.versionCode ?? 0),
+      };
+    }
+    return data;
+  } catch {
+    return {};
+  }
+}
+
 function isReactNativeProject(cwd: string): boolean {
   const pkgPath = path.resolve(cwd, 'package.json');
   if (!fs.existsSync(pkgPath)) return false;
@@ -164,6 +188,19 @@ export function bump(options: BumpOptions = {}): void {
     platforms = options.platforms;
   } else {
     platforms = isRN ? ['android', 'ios'] : ['web'];
+  }
+
+  if (isRN && platforms.includes('web')) {
+    throw new Error(
+      `Platform "web" is not available for React Native projects. ` +
+        `Use: android, ios, or both.`
+    );
+  }
+
+  if (!isRN && (platforms.includes('android') || platforms.includes('ios'))) {
+    throw new Error(
+      `Platforms "android" and "ios" are only available for React Native projects.`
+    );
   }
 
   if (isRN) {
@@ -225,12 +262,13 @@ function bumpReactNative({
   const pkgPath = path.resolve(cwd, 'package.json');
   const pkg: PackageJson = JSON.parse(readFile(pkgPath));
 
+  const outputPath = path.resolve(cwd, outputFile);
+  const versionData: RNVersionData = readExistingRNVersionData(outputPath);
+
   let nextVersion: string | undefined;
   if (!bumpCodeOnly && type) {
     nextVersion = incrementSemVer(pkg.version, type);
   }
-
-  const versionData: RNVersionData = {};
 
   if (platforms.includes('android')) {
     const gradlePath = options.gradlePath ?? findBuildGradlePath(cwd);
@@ -281,7 +319,6 @@ function bumpReactNative({
     console.log(`package.json: ${currentVersion} -> ${nextVersion}`);
   }
 
-  const outputPath = path.resolve(cwd, outputFile);
   writeFile(outputPath, JSON.stringify(versionData, null, 2) + '\n');
   console.log(`Version file saved: ${outputPath}`);
 }
