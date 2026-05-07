@@ -124,6 +124,14 @@ verlift bump <type> [options]
 | `--output <file>`      | `version.json` | Output file for version snapshot          |
 | `--gradlePath <path>`  | Auto-detected  | Path to `android/app/build.gradle`        |
 | `--pbxprojPath <path>` | Auto-detected  | Path to `ios/*.xcodeproj/project.pbxproj` |
+| `--platforms <list>`   | See below      | Comma-separated platforms to update       |
+
+**`--platforms` defaults:**
+
+| Project type  | Default platforms |
+| ------------- | ----------------- |
+| Web           | `web`             |
+| React Native  | `android,ios`     |
 
 **Examples:**
 
@@ -142,6 +150,15 @@ verlift bump code
 
 # Use custom native file paths
 verlift bump minor --gradlePath ./android/app/build.gradle --pbxprojPath ./ios/MyApp.xcodeproj/project.pbxproj
+
+# React Native: only bump Android
+verlift bump patch --platforms=android
+
+# React Native: only bump iOS
+verlift bump patch --platforms=ios
+
+# React Native: bump both platforms (default for RN)
+verlift bump patch --platforms=android,ios
 ```
 
 #### Web projects

@@ -2,7 +2,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { bump, BumpType } from './commands/bump';
+import { bump, BumpType, Platform } from './commands/bump';
 import { scan } from './commands/scan';
 
 const args = process.argv.slice(2);
@@ -33,6 +33,9 @@ Bump options (React Native project – auto-detected):
   --output <file>      Version file name (default: version.json)
   --gradlePath <path>  Explicit path to android/app/build.gradle
   --pbxprojPath <path> Explicit path to ios/.xcodeproj/project.pbxproj
+  --platforms <list>   Comma-separated platforms to update: web,android,ios
+                       Default for web projects: web
+                       Default for React Native projects: android,ios
 
 Examples:
   verlift bump patch
@@ -95,6 +98,7 @@ if (command === 'scan') {
     output?: string;
     gradlePath?: string;
     pbxprojPath?: string;
+    platforms?: Platform[];
   } = {};
 
   const argsStartIndex = resolvedSubcommand ? 2 : 1;
@@ -153,6 +157,31 @@ if (command === 'scan') {
       }
       options.pbxprojPath = next;
       i++;
+    } else if (arg.startsWith('--platforms=') || arg === '--platforms') {
+      let value: string;
+      if (arg.startsWith('--platforms=')) {
+        value = arg.slice('--platforms='.length);
+      } else {
+        const next = args[i + 1];
+        if (!next || next.startsWith('--')) {
+          console.error('Error: --platforms requires a comma-separated list of platforms (web,android,ios).');
+          process.exit(1);
+        }
+        value = next;
+        i++;
+      }
+      const validPlatforms: Platform[] = ['web', 'android', 'ios'];
+      const parsed = value.split(',').map((p) => p.trim()) as Platform[];
+      const invalid = parsed.filter((p) => !validPlatforms.includes(p));
+      if (invalid.length > 0) {
+        console.error(`Error: Invalid platform(s): ${invalid.join(', ')}. Valid values are: web, android, ios.`);
+        process.exit(1);
+      }
+      if (!isRN && parsed.some((p) => p === 'android' || p === 'ios')) {
+        console.error(`Error: Platforms "android" and "ios" are only available for React Native projects.`);
+        process.exit(1);
+      }
+      options.platforms = parsed;
     } else {
       console.error(`Unknown option: ${arg}`);
       printHelp();

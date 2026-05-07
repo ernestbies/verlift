@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 export type BumpType = 'patch' | 'minor' | 'major';
+export type Platform = 'web' | 'android' | 'ios';
 
 export interface BumpOptions {
   type?: BumpType;
@@ -10,6 +11,7 @@ export interface BumpOptions {
   output?: string;
   gradlePath?: string;
   pbxprojPath?: string;
+  platforms?: Platform[];
 }
 
 interface PackageJson {
@@ -30,8 +32,8 @@ interface WebVersionData {
 }
 
 interface RNVersionData {
-  android: { versionName: string; versionCode: number };
-  ios: { versionName: string; versionCode: number };
+  android?: { versionName: string; versionCode: number };
+  ios?: { versionName: string; versionCode: number };
 }
 
 function parseDecimal(str: string): number {
@@ -155,10 +157,25 @@ export function bump(options: BumpOptions = {}): void {
     throw new Error('Bump type (patch|minor|major) is required.');
   }
 
-  if (isReactNativeProject(cwd)) {
-    bumpReactNative({ cwd, type, bumpCodeOnly, outputFile, options });
+  const isRN = isReactNativeProject(cwd);
+
+  let platforms: Platform[];
+  if (options.platforms && options.platforms.length > 0) {
+    platforms = options.platforms;
   } else {
-    bumpWeb({ cwd, type: type!, outputFile });
+    platforms = isRN ? ['android', 'ios'] : ['web'];
+  }
+
+  if (isRN) {
+    bumpReactNative({ cwd, type, bumpCodeOnly, outputFile, options, platforms });
+  } else {
+    if (platforms.includes('web')) {
+      bumpWeb({ cwd, type: type!, outputFile });
+    } else {
+      throw new Error(
+        `No valid platforms to update. For web projects the only available platform is "web".`
+      );
+    }
   }
 }
 
@@ -196,19 +213,16 @@ function bumpReactNative({
   bumpCodeOnly,
   outputFile,
   options,
+  platforms,
 }: {
   cwd: string;
   type: BumpType | undefined;
   bumpCodeOnly: boolean;
   outputFile: string;
   options: BumpOptions;
+  platforms: Platform[];
 }): void {
-  const gradlePath = options.gradlePath ?? findBuildGradlePath(cwd);
-  const pbxprojPath = options.pbxprojPath ?? findPbxprojPath(cwd);
   const pkgPath = path.resolve(cwd, 'package.json');
-
-  let gradleContent = readFile(gradlePath);
-  let pbxContent = readFile(pbxprojPath);
   const pkg: PackageJson = JSON.parse(readFile(pkgPath));
 
   let nextVersion: string | undefined;
@@ -216,41 +230,56 @@ function bumpReactNative({
     nextVersion = incrementSemVer(pkg.version, type);
   }
 
-  const gradleCode = gradleBumpVersionCode(gradleContent);
-  gradleContent = gradleCode.updated;
-  console.log(`Android versionCode: ${gradleCode.current} -> ${gradleCode.next}`);
+  const versionData: RNVersionData = {};
 
-  const pbxCode = pbxBumpProjectVersion(pbxContent);
-  pbxContent = pbxCode.updated;
-  console.log(`iOS CURRENT_PROJECT_VERSION: ${pbxCode.current} -> ${pbxCode.next}`);
+  if (platforms.includes('android')) {
+    const gradlePath = options.gradlePath ?? findBuildGradlePath(cwd);
+    let gradleContent = readFile(gradlePath);
+
+    const gradleCode = gradleBumpVersionCode(gradleContent);
+    gradleContent = gradleCode.updated;
+    console.log(`Android versionCode: ${gradleCode.current} -> ${gradleCode.next}`);
+
+    if (!bumpCodeOnly && nextVersion) {
+      gradleContent = gradleSetVersionName(gradleContent, nextVersion);
+      console.log(`Android versionName: ${pkg.version} -> ${nextVersion}`);
+    }
+
+    writeFile(gradlePath, gradleContent);
+
+    versionData.android = {
+      versionName: gradleGetVersionName(gradleContent),
+      versionCode: gradleGetVersionCode(gradleContent),
+    };
+  }
+
+  if (platforms.includes('ios')) {
+    const pbxprojPath = options.pbxprojPath ?? findPbxprojPath(cwd);
+    let pbxContent = readFile(pbxprojPath);
+
+    const pbxCode = pbxBumpProjectVersion(pbxContent);
+    pbxContent = pbxCode.updated;
+    console.log(`iOS CURRENT_PROJECT_VERSION: ${pbxCode.current} -> ${pbxCode.next}`);
+
+    if (!bumpCodeOnly && nextVersion) {
+      pbxContent = pbxSetMarketingVersion(pbxContent, nextVersion);
+      console.log(`iOS MARKETING_VERSION: ${pkg.version} -> ${nextVersion}`);
+    }
+
+    writeFile(pbxprojPath, pbxContent);
+
+    versionData.ios = {
+      versionName: pbxGetMarketingVersion(pbxContent),
+      versionCode: pbxGetProjectVersion(pbxContent),
+    };
+  }
 
   if (!bumpCodeOnly && nextVersion) {
     const currentVersion = pkg.version;
-
-    gradleContent = gradleSetVersionName(gradleContent, nextVersion);
-    console.log(`Android versionName: ${currentVersion} -> ${nextVersion}`);
-
-    pbxContent = pbxSetMarketingVersion(pbxContent, nextVersion);
-    console.log(`iOS MARKETING_VERSION: ${currentVersion} -> ${nextVersion}`);
-
     pkg.version = nextVersion;
+    writeFile(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
     console.log(`package.json: ${currentVersion} -> ${nextVersion}`);
   }
-
-  writeFile(gradlePath, gradleContent);
-  writeFile(pbxprojPath, pbxContent);
-  writeFile(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
-
-  const versionData: RNVersionData = {
-    android: {
-      versionName: gradleGetVersionName(gradleContent),
-      versionCode: gradleGetVersionCode(gradleContent),
-    },
-    ios: {
-      versionName: pbxGetMarketingVersion(pbxContent),
-      versionCode: pbxGetProjectVersion(pbxContent),
-    },
-  };
 
   const outputPath = path.resolve(cwd, outputFile);
   writeFile(outputPath, JSON.stringify(versionData, null, 2) + '\n');
