@@ -164,7 +164,9 @@ if (command === 'scan') {
       } else {
         const next = args[i + 1];
         if (!next || next.startsWith('--')) {
-          console.error('Error: --platforms requires a comma-separated list of platforms (web,android,ios).');
+          console.error(
+            'Error: --platforms requires a comma-separated list of platforms (web,android,ios).'
+          );
           process.exit(1);
         }
         value = next;
@@ -174,11 +176,15 @@ if (command === 'scan') {
       const parsed = value.split(',').map((p) => p.trim()) as Platform[];
       const invalid = parsed.filter((p) => !validPlatforms.includes(p));
       if (invalid.length > 0) {
-        console.error(`Error: Invalid platform(s): ${invalid.join(', ')}. Valid values are: web, android, ios.`);
+        console.error(
+          `Error: Invalid platform(s): ${invalid.join(', ')}. Valid values are: web, android, ios.`
+        );
         process.exit(1);
       }
       if (!isRN && parsed.some((p) => p === 'android' || p === 'ios')) {
-        console.error(`Error: Platforms "android" and "ios" are only available for React Native projects.`);
+        console.error(
+          `Error: Platforms "android" and "ios" are only available for React Native projects.`
+        );
         process.exit(1);
       }
       options.platforms = parsed;

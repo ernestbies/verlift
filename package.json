@@ -1,6 +1,6 @@
 {
   "name": "verlift",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "CLI tool for scanning package licenses and bumping project versions. Supports both web and React Native projects.",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -18,11 +18,18 @@
   "files": [
     "dist"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ernestbies/verlift.git"
+  },
   "keywords": [
     "license",
+    "license-checking",
+    "license-scanning",
     "scan",
     "version",
     "bump",
+    "bump-version",
     "cli"
   ],
   "author": "ernestbies",
@@ -30,15 +37,13 @@
   "engines": {
     "node": ">=14"
   },
-  "dependencies": {
-    "typescript": "^5.8.3"
-  },
   "devDependencies": {
-    "@eslint/js": "^9.26.0",
-    "@types/node": "^22.15.3",
-    "eslint": "^9.26.0",
-    "eslint-config-prettier": "^10.1.5",
-    "prettier": "^3.5.3",
-    "typescript-eslint": "^8.32.0"
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^25.6.2",
+    "eslint": "^10.3.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.8.3",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.59.2"
   }
 }

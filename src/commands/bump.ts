@@ -192,15 +192,12 @@ export function bump(options: BumpOptions = {}): void {
 
   if (isRN && platforms.includes('web')) {
     throw new Error(
-      `Platform "web" is not available for React Native projects. ` +
-        `Use: android, ios, or both.`
+      `Platform "web" is not available for React Native projects. Use: android, ios, or both.`
     );
   }
 
   if (!isRN && (platforms.includes('android') || platforms.includes('ios'))) {
-    throw new Error(
-      `Platforms "android" and "ios" are only available for React Native projects.`
-    );
+    throw new Error(`Platforms "android" and "ios" are only available for React Native projects.`);
   }
 
   if (isRN) {

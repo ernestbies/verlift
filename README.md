@@ -128,10 +128,10 @@ verlift bump <type> [options]
 
 **`--platforms` defaults:**
 
-| Project type  | Default platforms |
-| ------------- | ----------------- |
-| Web           | `web`             |
-| React Native  | `android,ios`     |
+| Project type | Default platforms |
+| ------------ | ----------------- |
+| Web          | `web`             |
+| React Native | `android,ios`     |
 
 **Examples:**
 
