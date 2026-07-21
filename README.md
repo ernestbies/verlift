@@ -196,10 +196,6 @@ The output snapshot (`version.json`) includes selected React Native platform ent
 }
 ```
 
-The `web` entry does not include `versionCode`.
-
-If `--platforms=web` is used in a React Native project without `react-native-web`, `bump` exits with a dedicated error.
-
 Using `verlift bump code` only increments the native build codes (`versionCode` / `CURRENT_PROJECT_VERSION`) without changing the semver string — useful for re-releasing the same version to app stores.
 
 ---
