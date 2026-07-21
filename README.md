@@ -132,6 +132,7 @@ verlift bump <type> [options]
 | ------------ | ----------------- |
 | Web          | `web`             |
 | React Native | `android,ios`     |
+| React Native with `react-native-web` | `android,ios,web` |
 
 **Examples:**
 
@@ -157,8 +158,8 @@ verlift bump patch --platforms=android
 # React Native: only bump iOS
 verlift bump patch --platforms=ios
 
-# React Native: bump both platforms (default for RN)
-verlift bump patch --platforms=android,ios
+# React Native with react-native-web: bump all platforms (default when available)
+verlift bump patch --platforms=android,ios,web
 ```
 
 #### Web projects
@@ -175,8 +176,9 @@ When `react-native` is detected in your dependencies, `bump` additionally patche
 
 - **Android** (`android/app/build.gradle`): increments `versionCode` and updates `versionName`
 - **iOS** (`ios/*.xcodeproj/project.pbxproj`): increments `CURRENT_PROJECT_VERSION` and updates `MARKETING_VERSION`
+- **Web**: writes a `web.versionName` entry only when `react-native-web` is installed and `web` is selected
 
-The output snapshot (`version.json`) includes all platform versions:
+The output snapshot (`version.json`) includes selected React Native platform entries. Each entry stores the semver as `versionName`; Android and iOS also include their native build code:
 
 ```json
 {
@@ -187,9 +189,16 @@ The output snapshot (`version.json`) includes all platform versions:
   "ios": {
     "versionName": "1.3.0",
     "versionCode": 42
+  },
+  "web": {
+    "versionName": "1.3.0"
   }
 }
 ```
+
+The `web` entry does not include `versionCode`.
+
+If `--platforms=web` is used in a React Native project without `react-native-web`, `bump` exits with a dedicated error.
 
 Using `verlift bump code` only increments the native build codes (`versionCode` / `CURRENT_PROJECT_VERSION`) without changing the semver string — useful for re-releasing the same version to app stores.
 

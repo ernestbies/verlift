@@ -27,13 +27,18 @@ interface GradleCodeResult {
   next: number;
 }
 
+interface VersionData {
+  web?: { versionName: string };
+  android?: { versionName: string; versionCode: number };
+  ios?: { versionName: string; versionCode: number };
+}
+
 interface WebVersionData {
   version: string;
 }
 
-interface RNVersionData {
-  android?: { versionName: string; versionCode: number };
-  ios?: { versionName: string; versionCode: number };
+function getPackageDeps(pkg: PackageJson): Record<string, string> {
+  return { ...pkg.dependencies, ...pkg.devDependencies };
 }
 
 function parseDecimal(str: string): number {
@@ -110,36 +115,20 @@ function pbxBumpProjectVersion(content: string): GradleCodeResult {
   return { updated, current, next };
 }
 
-function readExistingRNVersionData(outputPath: string): RNVersionData {
-  if (!fs.existsSync(outputPath)) return {};
-  try {
-    const raw = JSON.parse(readFile(outputPath));
-    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
-    const data: RNVersionData = {};
-    if (raw.android && typeof raw.android === 'object' && !Array.isArray(raw.android)) {
-      data.android = {
-        versionName: String(raw.android.versionName ?? ''),
-        versionCode: Number(raw.android.versionCode ?? 0),
-      };
-    }
-    if (raw.ios && typeof raw.ios === 'object' && !Array.isArray(raw.ios)) {
-      data.ios = {
-        versionName: String(raw.ios.versionName ?? ''),
-        versionCode: Number(raw.ios.versionCode ?? 0),
-      };
-    }
-    return data;
-  } catch {
-    return {};
-  }
-}
-
 function isReactNativeProject(cwd: string): boolean {
   const pkgPath = path.resolve(cwd, 'package.json');
   if (!fs.existsSync(pkgPath)) return false;
   const pkg: PackageJson = JSON.parse(readFile(pkgPath));
-  const deps = { ...pkg.dependencies, ...pkg.devDependencies };
+  const deps = getPackageDeps(pkg);
   return Boolean(deps['react-native']);
+}
+
+function hasReactNativeWeb(cwd: string): boolean {
+  const pkgPath = path.resolve(cwd, 'package.json');
+  if (!fs.existsSync(pkgPath)) return false;
+  const pkg: PackageJson = JSON.parse(readFile(pkgPath));
+  const deps = getPackageDeps(pkg);
+  return Boolean(deps['react-native-web']);
 }
 
 function findBuildGradlePath(cwd: string): string {
@@ -182,22 +171,26 @@ export function bump(options: BumpOptions = {}): void {
   }
 
   const isRN = isReactNativeProject(cwd);
+  const supportsRNWeb = isRN && hasReactNativeWeb(cwd);
 
   let platforms: Platform[];
   if (options.platforms && options.platforms.length > 0) {
     platforms = options.platforms;
   } else {
     platforms = isRN ? ['android', 'ios'] : ['web'];
-  }
-
-  if (isRN && platforms.includes('web')) {
-    throw new Error(
-      `Platform "web" is not available for React Native projects. Use: android, ios, or both.`
-    );
+    if (isRN && supportsRNWeb) {
+      platforms.push('web');
+    }
   }
 
   if (!isRN && (platforms.includes('android') || platforms.includes('ios'))) {
     throw new Error(`Platforms "android" and "ios" are only available for React Native projects.`);
+  }
+
+  if (isRN && platforms.includes('web') && !supportsRNWeb) {
+    throw new Error(
+      `Platform "web" requires "react-native-web" to be installed in this React Native project.`
+    );
   }
 
   if (isRN) {
@@ -260,12 +253,13 @@ function bumpReactNative({
   const pkg: PackageJson = JSON.parse(readFile(pkgPath));
 
   const outputPath = path.resolve(cwd, outputFile);
-  const versionData: RNVersionData = readExistingRNVersionData(outputPath);
+  const versionData: VersionData = {};
 
   let nextVersion: string | undefined;
   if (!bumpCodeOnly && type) {
     nextVersion = incrementSemVer(pkg.version, type);
   }
+  const webVersion = nextVersion ?? pkg.version;
 
   if (platforms.includes('android')) {
     const gradlePath = options.gradlePath ?? findBuildGradlePath(cwd);
@@ -314,6 +308,12 @@ function bumpReactNative({
     pkg.version = nextVersion;
     writeFile(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
     console.log(`package.json: ${currentVersion} -> ${nextVersion}`);
+  }
+
+  if (platforms.includes('web')) {
+    versionData.web = {
+      versionName: webVersion,
+    };
   }
 
   writeFile(outputPath, JSON.stringify(versionData, null, 2) + '\n');

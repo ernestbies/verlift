@@ -28,7 +28,7 @@ Bump options (React Native project – auto-detected):
 
   patch|minor|major   Bump semver AND increment build codes
   code                Increment build codes only – React Native only
-                      (Android versionCode, iOS CURRENT_PROJECT_VERSION)
+                       (Android versionCode, iOS CURRENT_PROJECT_VERSION)
 
   --output <file>      Version file name (default: version.json)
   --gradlePath <path>  Explicit path to android/app/build.gradle
@@ -36,6 +36,7 @@ Bump options (React Native project – auto-detected):
   --platforms <list>   Comma-separated platforms to update: web,android,ios
                        Default for web projects: web
                        Default for React Native projects: android,ios
+                       Adds web by default when react-native-web is installed
 
 Examples:
   verlift bump patch
@@ -112,6 +113,7 @@ if (command === 'scan') {
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
   const deps = { ...pkg.dependencies, ...pkg.devDependencies };
   const isRN = Boolean(deps['react-native']);
+  const supportsRNWeb = isRN && Boolean(deps['react-native-web']);
 
   if (resolvedSubcommand === 'code' && !isRN) {
     console.error(
@@ -184,6 +186,12 @@ if (command === 'scan') {
       if (!isRN && parsed.some((p) => p === 'android' || p === 'ios')) {
         console.error(
           `Error: Platforms "android" and "ios" are only available for React Native projects.`
+        );
+        process.exit(1);
+      }
+      if (isRN && parsed.includes('web') && !supportsRNWeb) {
+        console.error(
+          `Error: Platform "web" requires "react-native-web" to be installed in this React Native project.`
         );
         process.exit(1);
       }
